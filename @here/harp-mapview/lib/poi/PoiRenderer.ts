@@ -482,7 +482,7 @@ export class PoiRenderer {
      */
     private preparePoi(pointLabel: TextElement, zoomLevel: number): void {
         const poiInfo = pointLabel.poiInfo;
-        if (poiInfo === undefined || !pointLabel.visible) {
+        if (poiInfo === undefined || !pointLabel.reallyVisible) {
             return;
         }
 
@@ -493,7 +493,7 @@ export class PoiRenderer {
 
         if (poiInfo.poiTableName !== undefined) {
             if (this.mapView.poiManager.updatePoiFromPoiTable(pointLabel)) {
-                if (!pointLabel.visible) {
+                if (!pointLabel.reallyVisible) {
                     // PoiTable set this POI to not visible.
                     return;
                 }

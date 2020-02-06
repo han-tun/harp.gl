@@ -684,7 +684,7 @@ function evaluateProperty(value: any, zoomLevel?: number): any {
  * @param value the value of color property defined in technique
  * @param zoomLevel zoom level used for interpolation.
  */
-export function evaluateColorProperty(value: Value, zoomLevel?: number): number {
+export function evaluateColorProperty(value: Value | Expr, zoomLevel?: number): number {
     value = evaluateProperty(value, zoomLevel);
 
     if (typeof value === "number") {

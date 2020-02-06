@@ -6,6 +6,7 @@
 
 import {
     ColorUtils,
+    Expr,
     getPropertyValue,
     IndexedTechniqueParams,
     LineMarkerTechnique,
@@ -421,6 +422,50 @@ export class TextStyleCache {
                 ...renderParams
             });
             this.m_textRenderStyleCache.set(cacheId, renderStyle);
+
+            if (Expr.isExpr(technique.color) || Expr.isExpr(technique.opacity)) {
+                tile.addUpdater(() => {
+                    let colorHex = evaluateColorProperty(technique.color!, mapView.zoomLevel);
+                    let opacity2 = getPropertyValue(technique.opacity, mapView.zoomLevel) || 1;
+
+                    if (ColorUtils.hasAlphaInHex(colorHex)) {
+                        const alpha = ColorUtils.getAlphaFromHex(colorHex);
+                        opacity2 = opacity2 * alpha;
+                        colorHex = ColorUtils.removeAlphaFromHex(colorHex);
+                    }
+                    renderStyle!.color.set(colorHex);
+                    renderStyle!.opacity = opacity2;
+                });
+            }
+
+            if (
+                Expr.isExpr(technique.backgroundColor) ||
+                Expr.isExpr(technique.backgroundOpacity)
+            ) {
+                tile.addUpdater(() => {
+                    let colorHex = evaluateColorProperty(
+                        technique.backgroundColor!,
+                        mapView.zoomLevel
+                    );
+                    let opacity2 =
+                        getPropertyValue(technique.backgroundOpacity, mapView.zoomLevel) || 1;
+
+                    if (ColorUtils.hasAlphaInHex(colorHex)) {
+                        const alpha = ColorUtils.getAlphaFromHex(colorHex);
+                        opacity2 = opacity2 * alpha;
+                        colorHex = ColorUtils.removeAlphaFromHex(colorHex);
+                    }
+                    renderStyle!.backgroundColor.set(colorHex);
+                    renderStyle!.backgroundOpacity = opacity2;
+                });
+            }
+            if (Expr.isExpr(technique.size)) {
+                tile.addUpdater(() => {
+                    const size2 = getPropertyValue(technique.size, mapView.zoomLevel);
+
+                    renderStyle!.fontSize.size = size2;
+                });
+            }
         }
 
         return renderStyle;
