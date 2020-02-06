@@ -94,42 +94,21 @@ const dynamicPropertiesTempEnv = new MapEnv({
 });
 
 /**
- * Get the value of the specified property at the given zoom level.
- *
- * @param property Property of a technique.
- * @param env The [[Env]] used to evaluate the property.
- */
-export function getPropertyValue(
-    property: Value | Expr | InterpolatedProperty | undefined,
-    env: Env
-): any;
+* Get the value of the specified property in given `env`.
 
-/**
- * Get the value of the specified property at the given zoom level.
- *
- * @param property Property of a technique.
- * @param level Display level the property should be rendered at.
- * @param pixelToMeters Optional pixels to meters conversion factor (needed for proper
- * interpolation of `length` values).
- *
- */
+* @param property Property of a technique.
+* @param envOrLevel The [[Env]] used to evaluate the property or (@deprecated number indicating
+    current zoom level
+*/
 export function getPropertyValue(
     property: Value | Expr | InterpolatedProperty | undefined,
-    level: number,
-    pixelToMeters?: number
-): any;
-
-export function getPropertyValue(
-    property: Value | Expr | InterpolatedProperty | undefined,
-    envOrLevel: number | Env,
-    pixelToMeters: number = 1.0
+    envOrLevel: number | Env
 ): any {
     if (Expr.isExpr(property)) {
         let env: Env;
 
         if (typeof envOrLevel === "number") {
             dynamicPropertiesTempEnv.entries.$zoom = envOrLevel;
-            dynamicPropertiesTempEnv.entries.$pixelToMeters = pixelToMeters;
             env = dynamicPropertiesTempEnv;
         } else {
             env = envOrLevel;
@@ -139,9 +118,11 @@ export function getPropertyValue(
     }
 
     let level: number;
+    let pixelToMeters: number;
 
     if (typeof envOrLevel === "number") {
         level = envOrLevel;
+        pixelToMeters = 1.0;
     } else {
         level = envOrLevel.lookup("$zoom") as number;
         pixelToMeters = envOrLevel.lookup("$pixelToMeters") as number;

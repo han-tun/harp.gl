@@ -9,6 +9,7 @@ import {
     getPropertyValue,
     IndexedTechniqueParams,
     LineMarkerTechnique,
+    MapEnv,
     PoiTechnique,
     Technique,
     TextStyleDefinition,
@@ -298,16 +299,19 @@ export class TextStyleCache {
      */
     getRenderStyle(
         tile: Tile,
-        technique: TextTechnique | PoiTechnique | LineMarkerTechnique
+        technique: TextTechnique | PoiTechnique | LineMarkerTechnique,
     ): TextRenderStyle {
         const mapView = tile.mapView;
         const dataSource = tile.dataSource;
         const zoomLevel = mapView.zoomLevel;
         const zoomLevelInt = Math.floor(zoomLevel);
 
+
         const cacheId = computeStyleCacheId(dataSource.name, technique, zoomLevelInt);
         let renderStyle = this.m_textRenderStyleCache.get(cacheId);
         if (renderStyle === undefined) {
+            const discreteZoomEnv = new MapEnv({$zoom: zoomLevelInt}, mapView.mapEnv);
+
             const defaultRenderParams = this.m_defaultStyle.renderParams;
 
             // Sets opacity to 1.0 if default and technique attribute are undefined.
@@ -321,7 +325,7 @@ export class TextStyleCache {
             let color: THREE.Color | undefined;
             // Store color (RGB) in cache and multiply opacity value with the color alpha channel.
             if (technique.color !== undefined) {
-                let hexColor = evaluateColorProperty(technique.color, zoomLevelInt);
+                let hexColor = evaluateColorProperty(technique.color, discreteZoomEnv);
                 if (ColorUtils.hasAlphaInHex(hexColor)) {
                     const alpha = ColorUtils.getAlphaFromHex(hexColor);
                     opacity = opacity * alpha;
@@ -364,7 +368,7 @@ export class TextStyleCache {
             let backgroundColor: THREE.Color | undefined;
             // Store background color (RGB) in cache and multiply backgroundOpacity by its alpha.
             if (technique.backgroundColor !== undefined) {
-                let hexBgColor = evaluateColorProperty(technique.backgroundColor, zoomLevelInt);
+                let hexBgColor = evaluateColorProperty(technique.backgroundColor, discreteZoomEnv);
                 if (ColorUtils.hasAlphaInHex(hexBgColor)) {
                     const alpha = ColorUtils.getAlphaFromHex(hexBgColor);
                     backgroundOpacity = backgroundOpacity * alpha;
@@ -379,7 +383,7 @@ export class TextStyleCache {
                     unit: FontUnit.Pixel,
                     size: getPropertyValue(
                         getOptionValue(technique.size, defaultRenderParams.fontSize!.size),
-                        zoomLevelInt
+                        discreteZoomEnv
                     ),
                     backgroundSize
                 },
@@ -434,20 +438,22 @@ export class TextStyleCache {
         tile: Tile,
         technique: TextTechnique | PoiTechnique | LineMarkerTechnique
     ): TextLayoutStyle {
+        const mapView = tile.mapView;
         const floorZoomLevel = Math.floor(tile.mapView.zoomLevel);
         const cacheId = computeStyleCacheId(tile.dataSource.name, technique, floorZoomLevel);
         let layoutStyle = this.m_textLayoutStyleCache.get(cacheId);
 
         if (layoutStyle === undefined) {
+            const discreteZoomEnv = new MapEnv({$zoom: floorZoomLevel}, mapView.mapEnv);
             const defaultLayoutParams = this.m_defaultStyle.layoutParams;
 
-            const hAlignment = getPropertyValue(technique.hAlignment, floorZoomLevel) as
+            const hAlignment = getPropertyValue(technique.hAlignment, discreteZoomEnv) as
                 | string
                 | undefined;
-            const vAlignment = getPropertyValue(technique.vAlignment, floorZoomLevel) as
+            const vAlignment = getPropertyValue(technique.vAlignment, discreteZoomEnv) as
                 | string
                 | undefined;
-            const wrapping = getPropertyValue(technique.wrappingMode, floorZoomLevel) as
+            const wrapping = getPropertyValue(technique.wrappingMode, discreteZoomEnv) as
                 | string
                 | undefined;
 
@@ -463,22 +469,22 @@ export class TextStyleCache {
 
             const layoutParams = {
                 tracking:
-                    getPropertyValue(technique.tracking, floorZoomLevel) ??
+                    getPropertyValue(technique.tracking, discreteZoomEnv) ??
                     defaultLayoutParams.tracking,
                 leading:
-                    getPropertyValue(technique.leading, floorZoomLevel) ??
+                    getPropertyValue(technique.leading, discreteZoomEnv) ??
                     defaultLayoutParams.leading,
                 maxLines:
-                    getPropertyValue(technique.maxLines, floorZoomLevel) ??
+                    getPropertyValue(technique.maxLines, discreteZoomEnv) ??
                     defaultLayoutParams.maxLines,
                 lineWidth:
-                    getPropertyValue(technique.lineWidth, floorZoomLevel) ??
+                    getPropertyValue(technique.lineWidth, discreteZoomEnv) ??
                     defaultLayoutParams.lineWidth,
                 canvasRotation:
-                    getPropertyValue(technique.canvasRotation, floorZoomLevel) ??
+                    getPropertyValue(technique.canvasRotation, discreteZoomEnv) ??
                     defaultLayoutParams.canvasRotation,
                 lineRotation:
-                    getPropertyValue(technique.lineRotation, floorZoomLevel) ??
+                    getPropertyValue(technique.lineRotation, discreteZoomEnv) ??
                     defaultLayoutParams.lineRotation,
                 wrappingMode:
                     wrapping === "None" || wrapping === "Character" || wrapping === "Word"
